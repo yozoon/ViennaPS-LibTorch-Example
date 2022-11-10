@@ -36,7 +36,7 @@ find_package(ViennaPS QUIET PATHS ${ViennaPS_DIR} NO_DEFAULT_PATH)
 if(Torch_FOUND AND ViennaPS_FOUND)
   # Remove the buildDependencies target from the ALL target to prevent unnecessary re-builds
   set_target_properties(buildDependencies PROPERTIES EXCLUDE_FROM_ALL true)
-  add_subdirectory(src)
+  add_subdirectory(app)
 else()
   message(WARNING "Not all dependencies were found. Execute buildDependencies target first.")
   # Add the buildDependencies target to the ALL target

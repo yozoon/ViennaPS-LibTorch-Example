@@ -2,9 +2,9 @@ name: macOS
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 env:
@@ -16,23 +16,27 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Configure
-      run: |
-        cmake -B ${{github.workspace}}/build \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-          -DOpenMP_C_FLAGS="-Xpreprocessor -fopenmp -I$(brew --prefix libomp)/include" \
-          -DOpenMP_CXX_FLAGS="-Xpreprocessor -fopenmp -I$(brew --prefix libomp)/include" \
-          -DOpenMP_C_LIB_NAMES="omp" \
-          -DOpenMP_CXX_LIB_NAMES="omp" \
-          -DOpenMP_omp_LIBRARY="$(brew --prefix libomp)/lib/libomp.a"
- 
-    - name: Build
-      run: |
-        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      - name: AppleClang OpenMP environment setup
+        # Set the environment variables used for teaching AppleClang how to use OpenMP
+        run: |
+          echo "OpenMP_C_FLAGS=\"-Xpreprocessor -fopenmp -I$(brew --prefix libomp)/include\"" >> $GITHUB_ENV
+          echo "OpenMP_CXX_FLAGS=\"-Xpreprocessor -fopenmp -I$(brew --prefix libomp)/include\"" >> $GITHUB_ENV
+          echo "OpenMP_C_LIB_NAMES=\"omp\"" >> $GITHUB_ENV
+          echo "OpenMP_CXX_LIB_NAMES=\"omp\"" >> $GITHUB_ENV
+          echo "OpenMP_omp_LIBRARY=\"$(brew --prefix libomp)/lib/libomp.a\"" >> $GITHUB_ENV
 
-    - name: Run
-      working-directory: ${{github.workspace}}/build/src
-      run: ./TorchDemo
+      - name: Configure
+        run: |
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+      - name: Build
+        # Run build twice: the first time the missing dependencies will be built and the second time the actual application will be built
+        run: |
+          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+      - name: Run
+        working-directory: ${{github.workspace}}/build/app
+        run: ./TorchDemo
